@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hospital Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+ <link rel="stylesheet" href="./Frontend/css/style.css">
+ <link rel="stylesheet" href="./Frontend/css/hospital.css">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">Ayuraa</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="./Frontend/index.html"><i class="fa fa-home"></i> Home</a></li>
+            <li><a href="../Hospitaldashboard.html"><i class="fa fa-hospital"></i> Hospitals</a></li>
+            <li><a href="../Bloodbanks.html"><i class="fa fa-tint"></i> Blood Bank</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle"><i class="fa fa-search"></i> Explore</a>
+                <ul class="dropdown-menu">
+                    <li><a href="/doctors"><i class="fa fa-user-md"></i> Doctors</a></li>
+                    <li><a href="/beds"><i class="fa fa-bed"></i> Bed Availability</a></li>
+                    <li><a href="/oxygen-cylinders"><i class="fa fa-medkit"></i> Oxygen Cylinders</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="nav-actions">
+            <!-- <button id="theme-toggle"><i class="fa fa-moon"></i></button> -->
+            <div id="auth-section">
+                <a href="/login.html" id="login-btn">Login</a>
+            </div>
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    const authSection = document.getElementById("auth-section");
+                    const loginBtn = document.getElementById("login-btn");
+                    const user = JSON.parse(localStorage.getItem("user"));
+
+                    if (user && user.picture) {
+                        // User is logged in
+                        authSection.innerHTML = `
+                      <div class="profile-container">
+                        <img src="${user.picture}" alt="Profile" class="profile-img" id="profile-img" />
+                        <div class="logout-btn" id="logout-btn">Logout</div>
+                      </div>
+                    `;
+
+                        const profileImg = document.getElementById("profile-img");
+                        const logoutBtn = document.getElementById("logout-btn");
+
+                        profileImg.addEventListener("click", () => {
+                            logoutBtn.style.display = logoutBtn.style.display === "block" ? "none" : "block";
+                        });
+
+                        logoutBtn.addEventListener("click", () => {
+                            localStorage.removeItem("user");
+                            window.location.reload();
+                        });
+                    } else {
+                        // User not logged in
+                        loginBtn.disabled = false;
+                        loginBtn.addEventListener("click", () => {
+                            window.location.href = "./login.html";
+                        });
+                    }
+                });
+            </script>
+            <button id="mobile-toggle">&#9776;</button>
+        </div>
+        <div id="mobile-menu" class="mobile-menu hidden">
+            <a href="#">Home</a>
+            <a href="#">Hospitals</a>
+            <a href="#">Services</a>
+            <a href="#">Contact</a>
+        </div>
+    </nav>
+  <div class="search-container">
+    <input type="text" id="searchInput" placeholder="Search hospitals or allow location">
+    <button onclick="searchHospitals()">Search <i class="fas fa-search"></i></button>
+    <button onclick="getUserLocation()">Use Location <i class="fas fa-map-marker-alt"></i></button>
+  </div>
+
+  <div class="emergency-section">
+    <h3><i class="fas fa-exclamation-triangle"></i> Emergency Contacts</h3>
+    <p><i class="fas fa-ambulance"></i> Ambulance: <strong>108</strong></p>
+    <p><i class="fas fa-phone-alt"></i> National Helpline: <strong>112</strong></p>
+    <p><i class="fas fa-hospital-symbol"></i> Nearest Hospital: <strong>City Hospital - 044-12345678</strong></p>
+  </div>
+
+  <div id="hospitalList"></div>
+  <div id="hospitalDetails" class="modal"></div>
+
+  <script>
+    const hospitals = [
+    {
+      id: 1,
+      name: "MIOT International",
+      location: "Chennai",
+      bedsAvailable: 12,
+      distance: "10 km",
+      rating: 4.6,
+      specialties: ["Orthopedics", "Cardiology"],
+      insurance: ["Star Health", "New India Assurance"],
+      reviews: ["Excellent care!", "Highly professional staff."]
+    },
+    {
+      id: 2,
+      name: "Sri Ramachandra Medical Centre",
+      location: "Chennai",
+      bedsAvailable: 20,
+      distance: "15 km",
+      rating: 4.7,
+      specialties: ["Neurology", "Oncology"],
+      insurance: ["ICICI Lombard", "HDFC ERGO"],
+      reviews: ["World-class facilities!", "Very clean and organized."]
+    },
+    {
+      id: 3,
+      name: "Apollo Hospitals",
+      location: "Chennai",
+      bedsAvailable: 25,
+      distance: "8 km",
+      rating: 4.8,
+      specialties: ["Cardiology", "Gastroenterology"],
+      insurance: ["Bajaj Allianz", "Religare Health"],
+      reviews: ["Highly recommended!", "Exceptional service."]
+    },
+    {
+      id: 4,
+      name: "Manipal Hospital",
+      location: "Bangalore",
+      bedsAvailable: 18,
+      distance: "350 km",
+      rating: 4.5,
+      specialties: ["Pediatrics", "Orthopedics"],
+      insurance: ["Star Health", "HDFC ERGO"],
+      reviews: ["Great doctors!", "Friendly staff."]
+    },
+    {
+      id: 5,
+      name: "Fortis Hospital",
+      location: "Bangalore",
+      bedsAvailable: 22,
+      distance: "355 km",
+      rating: 4.6,
+      specialties: ["Neurology", "Cardiology"],
+      insurance: ["ICICI Lombard", "New India Assurance"],
+      reviews: ["Excellent facilities!", "Very professional."]
+    },
+    {
+      id: 6,
+      name: "Narayana Health",
+      location: "Bangalore",
+      bedsAvailable: 30,
+      distance: "360 km",
+      rating: 4.7,
+      specialties: ["Oncology", "Gastroenterology"],
+      insurance: ["Bajaj Allianz", "Religare Health"],
+      reviews: ["Outstanding care!", "Highly skilled doctors."]
+    },
+    {
+      id: 7,
+      name: "Yashoda Hospitals",
+      location: "Hyderabad",
+      bedsAvailable: 28,
+      distance: "625 km",
+      rating: 4.6,
+      specialties: ["Cardiology", "Pulmonology"],
+      insurance: ["Star Health", "HDFC ERGO"],
+      reviews: ["Very clean and organized.", "Great experience."]
+    },
+    {
+      id: 8,
+      name: "KIMS Hospitals",
+      location: "Hyderabad",
+      bedsAvailable: 35,
+      distance: "630 km",
+      rating: 4.7,
+      specialties: ["Neurology", "Orthopedics"],
+      insurance: ["ICICI Lombard", "New India Assurance"],
+      reviews: ["Highly recommended!", "Friendly staff."]
+    },
+    {
+      id: 9,
+      name: "Care Hospitals",
+      location: "Hyderabad",
+      bedsAvailable: 40,
+      distance: "635 km",
+      rating: 4.8,
+      specialties: ["Oncology", "Gastroenterology"],
+      insurance: ["Bajaj Allianz", "Religare Health"],
+      reviews: ["Exceptional service!", "Very professional."]
+    },
+    {
+      id: 10,
+      name: "Amrita Institute of Medical Sciences",
+      location: "Kochi",
+      bedsAvailable: 50,
+      distance: "700 km",
+      rating: 4.9,
+      specialties: ["Cardiology", "Nephrology"],
+      insurance: ["Star Health", "HDFC ERGO"],
+      reviews: ["Outstanding care!", "Highly skilled staff."]
+    },
+    {
+      id: 11,
+      name: "Aster Medcity",
+      location: "Kochi",
+      bedsAvailable: 45,
+      distance: "705 km",
+      rating: 4.8,
+      specialties: ["Neurology", "Orthopedics"],
+      insurance: ["ICICI Lombard", "New India Assurance"],
+      reviews: ["Amazing service!", "Very professional."]
+    },
+    {
+      id: 12,
+      name: "Lakeshore Hospital",
+      location: "Kochi",
+      bedsAvailable: 40,
+      distance: "710 km",
+      rating: 4.7,
+      specialties: ["Oncology", "Gastroenterology"],
+      insurance: ["Bajaj Allianz", "Religare Health"],
+      reviews: ["Highly recommended!", "Great facilities."]
+    }
+
+    ];
+
+    function searchHospitals() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const results = hospitals.filter(h =>
+        h.name.toLowerCase().includes(query) || h.location.toLowerCase().includes(query)
+      );
+      displayHospitals(results);
+    }
+
+    function getUserLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          alert("Location fetched! Showing nearby hospitals.");
+          displayHospitals(hospitals);
+        }, () => {
+          alert("Location access denied.");
+        });
+      } else {
+        alert("Geolocation not supported.");
+      }
+    }
+
+    function displayHospitals(hospitals) {
+      const list = document.getElementById('hospitalList');
+      list.innerHTML = '';
+      hospitals.forEach(h => {
+        const div = document.createElement('div');
+        div.className = 'hospital-card';
+        div.innerHTML = `
+          <h3><i class="fas fa-hospital"></i> ${h.name}</h3>
+          <p><i class="fas fa-map-marker-alt"></i> ${h.location}</p>
+          <p><i class="fas fa-bed"></i> Beds: ${h.bedsAvailable}</p>
+          <p><i class="fas fa-road"></i> Distance: ${h.distance}</p>
+          <p><i class="fas fa-star"></i> Rating: ${h.rating}</p>
+          <button onclick="showDetails(${h.id})"><i class="fas fa-eye"></i> Read More</button>
+          <button onclick="navigateToHospital('${h.location}')"><i class="fas fa-directions"></i> Navigate</button>
+          <button onclick="bookAmbulance('${h.name}')"><i class="fas fa-ambulance"></i> Book Ambulance</button>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function showDetails(id) {
+      const h = hospitals.find(h => h.id === id);
+      const modal = document.getElementById('hospitalDetails');
+      modal.style.display = 'block';
+      modal.innerHTML = `
+        <h2><i class="fas fa-hospital"></i> ${h.name}</h2>
+        <p><i class="fas fa-star"></i> Rating: ${h.rating}</p>
+        <p><i class="fas fa-stethoscope"></i> Specialties: ${h.specialties.join(', ')}</p>
+        <p><i class="fas fa-file-medical"></i> Insurance: ${h.insurance.join(', ')}</p>
+        <button onclick="bookAppointment(${h.id})"><i class="fas fa-calendar-plus"></i> Book Appointment</button>
+        <button onclick="closeModal()" class="close"><i class="fas fa-times-circle"></i></button>
+        <div id="appointmentStatus"></div>
+
+        <div class="review-section">
+          <h3><i class="fas fa-comments"></i> Patient Reviews</h3>
+          ${h.reviews.map(r => `<div class="review-box"><p><span>★</span> ${r}</p></div>`).join('')}
+          <div class="review-input">
+            <textarea id="newReview" rows="3" placeholder="Add your review here..."></textarea>
+            <button onclick="addReview(${h.id})">Submit Review</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function closeModal() {
+      document.getElementById('hospitalDetails').style.display = 'none';
+    }
+
+    function navigateToHospital(location) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+      window.open(url, '_blank');
+    }
+
+    function bookAppointment(id) {
+      const h = hospitals.find(h => h.id === id);
+      const statusDiv = document.getElementById('appointmentStatus');
+      statusDiv.style.color = "orange";
+      statusDiv.innerHTML = `Booking appointment at ${h.name}... <i class="fas fa-spinner fa-spin"></i>`;
+      setTimeout(() => {
+        statusDiv.style.color = "green";
+        statusDiv.innerHTML = `✅ Appointment confirmed at ${h.name}`;
+      }, 2000);
+    }
+
+    function bookAmbulance(name) {
+      alert(`🚑 Ambulance booked to ${name}. Help is on the way!`);
+    }
+
+    function addReview(id) {
+      const reviewText = document.getElementById('newReview').value.trim();
+      if (reviewText) {
+        const hospital = hospitals.find(h => h.id === id);
+        hospital.reviews.push(reviewText);
+        showDetails(id); // Re-render modal
+      } else {
+        alert("Please enter a review.");
+      }
+    }
+
+    displayHospitals(hospitals);
+  </script>
+   <footer class="footer">
+    <div class="footer-bottom">
+        <p>&copy; 2025 Aayura HealthHub. All rights reserved.</p>
+    </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ayuraa Navbar</title>
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">Ayuraa</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html"><i class="fa fa-home"></i> Home</a></li>
+            <li><a href="../Hospitaldashboard.html"><i class="fa fa-hospital"></i> Hospitals</a></li>
+            <li><a href="../Bloodbanks.html"><i class="fa fa-tint"></i> Blood Bank</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle"><i class="fa fa-search"></i> Explore</a>
+                <ul class="dropdown-menu">
+                    <li><a href="/doctors"><i class="fa fa-user-md"></i> Doctors</a></li>
+                    <li><a href="/beds"><i class="fa fa-bed"></i> Bed Availability</a></li>
+                    <li><a href="/oxygen-cylinders"><i class="fa fa-medkit"></i> Oxygen Cylinders</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="nav-actions">
+            <!-- <button id="theme-toggle"><i class="fa fa-moon"></i></button> -->
+            <div id="auth-section">
+                <a href="/login.html" id="login-btn">Login</a>
+            </div>
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    const authSection = document.getElementById("auth-section");
+                    const loginBtn = document.getElementById("login-btn");
+                    const user = JSON.parse(localStorage.getItem("user"));
+
+                    if (user && user.picture) {
+                        // User is logged in
+                        authSection.innerHTML = `
+                      <div class="profile-container">
+                        <img src="${user.picture}" alt="Profile" class="profile-img" id="profile-img" />
+                        <div class="logout-btn" id="logout-btn">Logout</div>
+                      </div>
+                    `;
+
+                        const profileImg = document.getElementById("profile-img");
+                        const logoutBtn = document.getElementById("logout-btn");
+
+                        profileImg.addEventListener("click", () => {
+                            logoutBtn.style.display = logoutBtn.style.display === "block" ? "none" : "block";
+                        });
+
+                        logoutBtn.addEventListener("click", () => {
+                            localStorage.removeItem("user");
+                            window.location.reload();
+                        });
+                    } else {
+                        // User not logged in
+                        loginBtn.disabled = false;
+                        loginBtn.addEventListener("click", () => {
+                            window.location.href = "./login.html";
+                        });
+                    }
+                });
+            </script>
+            <button id="mobile-toggle">&#9776;</button>
+        </div>
+        <div id="mobile-menu" class="mobile-menu hidden">
+            <a href="#">Home</a>
+            <a href="#">Hospitals</a>
+            <a href="#">Services</a>
+            <a href="#">Contact</a>
+        </div>
+    </nav>
+    <section class="home-section">
+        <div class="home-content">
+            <h1>Aayura HealthHub</h1>
+            <p>Your one-stop solution for all healthcare needs. Explore hospitals, blood banks, doctors, and more with
+                ease.</p>
+            <button class="help-button" onclick="window.location.href='../Hospitaldashboard.html';"><i
+                    class="fa fa-exclamation"></i> Need Immediate Help <i class="fa fa-arrow-right dotted-arrow"></i>
+            </button>
+
+        </div>
+        <div class="home-cards-container">
+            <div class="home-card">
+                <h3><i class="fa fa-hospital"></i> Hospital Status</h3>
+                <p>Locate the best hospitals near you with detailed information and reviews.</p>
+                <p id="hospital-count">Hospitals near you: <span>14</span></p>
+            </div>
+            <!-- <script>
+                function getDistance(lat1, lon1, lat2, lon2) {
+                    const R = 6371;
+                    const dLat = (lat2 - lat1) * (Math.PI / 180);
+                    const dLon = (lon2 - lon1) * (Math.PI / 180);
+                    const a =
+                        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(lat1 * (Math.PI / 180)) *
+                        Math.cos(lat2 * (Math.PI / 180)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    return R * c;
+                }
+
+                function updateHospitalCount(userLat, userLng, hospitalData) {
+                    const nearbyHospitals = hospitalData.filter(hospital => {
+                        const distance = getDistance(userLat, userLng, hospital.lat, hospital.lng);
+                        return distance <= 10;
+                    });
+
+                    document.querySelector("#hospital-count span").innerText = nearbyHospitals.length;
+                }
+
+                function fetchHospitalsAndUpdateCount(userLat, userLng) {
+                    fetch('http://localhost:5000/ayura-api/hospitals')
+                        .then(res => res.json())
+                        .then(data => {
+                            updateHospitalCount(userLat, userLng, data);
+                        })
+                        .catch(err => {
+                            console.error("Failed to fetch hospital data:", err);
+                        });
+                }
+
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        position => {
+                            const userLat = position.coords.latitude;
+                            const userLng = position.coords.longitude;
+                            fetchHospitalsAndUpdateCount(userLat, userLng);
+                        },
+                        error => {
+                            console.error("Geolocation error:", error);
+                            document.querySelector("#hospital-count span").innerText = "Location denied";
+                        }
+                    );
+                } else {
+                    document.querySelector("#hospital-count span").innerText = "Geolocation not supported";
+                }
+            </script> -->
+            <div class="home-card">
+                <h3><i class="fa fa-tint"></i> Blood Bank</h3>
+                <p>Access blood banks and ensure timely availability of blood for emergencies.</p>
+                <p id="blood-bank-count">Blood banks near you: <span> 8 </span></p>
+                <ul id="blood-bank-list"></ul>
+            </div>
+            <script>
+                async function fetchBloodBanks(lat, lon) {
+                    try {
+                        const response = await fetch(`https://67f904c4094de2fe6ea023da.mockapi.io/api/bloodbank?lat=${lat}&lon=${lon}`);
+                        const data = await response.json();
+
+                        const nearbyBanks = data.filter(bank => {
+                            const distance = getDistanceFromLatLonInKm(lat, lon, bank.latitude, bank.longitude);
+                            return distance <= 50;
+                        });
+
+                        document.getElementById("blood-bank-count").innerHTML = `Blood banks near you: <span>${nearbyBanks.length}</span>`;
+
+                        const listEl = document.getElementById("blood-bank-list");
+                        nearbyBanks.forEach(bank => {
+                            const li = document.createElement("li");
+                            li.textContent = `${bank.name} - ${bank.status}`;
+                            listEl.appendChild(li);
+                        });
+
+                    } catch (err) {
+                        console.error("Error fetching blood banks:", err);
+                        document.getElementById("blood-bank-count").innerHTML = `Error fetching data.`;
+                    }
+                }
+
+                function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+                    const R = 6371; // Radius of the earth in km
+                    const dLat = deg2rad(lat2 - lat1);
+                    const dLon = deg2rad(lon2 - lon1);
+                    const a =
+                        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2)
+                        ;
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                    return R * c; // Distance in km
+                }
+
+                function deg2rad(deg) {
+                    return deg * (Math.PI / 180);
+                }
+
+                function getUserLocation() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(position => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            fetchBloodBanks(lat, lon);
+                        }, error => {
+                            console.error("Geolocation error:", error);
+                            document.getElementById("blood-bank-count").innerHTML = `Location permission denied.`;
+                        });
+                    } else {
+                        document.getElementById("blood-bank-count").innerHTML = `Geolocation not supported.`;
+                    }
+                }
+
+                // Start on load
+                window.onload = getUserLocation;
+            </script>
+            <div class="home-card">
+                <h3><i class="fa fa-ambulance"></i> Ambulance Availability</h3>
+                <p>Check for available ambulances near your location for emergencies.</p>
+                <p id="ambulance-count">Ambulances near you: <span>Not Available Now</span></p>
+            </div>
+            <!-- <script>
+                async function fetchAmbulances(lat, lon) {
+                    try {
+                        const response = await fetch(`https://api.example.com/ambulances?lat=${lat}&lon=${lon}`);
+                        const data = await response.json();
+
+                        const nearbyAmbulances = data.filter(ambulance => {
+                            const distance = getDistanceFromLatLonInKm(lat, lon, ambulance.latitude, ambulance.longitude);
+                            return distance <= 10;
+                        });
+
+                        document.getElementById("ambulance-count").innerHTML = `Ambulances near you: <span>${nearbyAmbulances.length}</span>`;
+                    } catch (err) {
+                        console.error("Error fetching ambulances:", err);
+                        document.getElementById("ambulance-count").innerHTML = `Error fetching data.`;
+                    }
+                }
+
+                function getUserLocationForAmbulances() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(position => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            fetchAmbulances(lat, lon);
+                        }, error => {
+                            console.error("Geolocation error:", error);
+                            document.getElementById("ambulance-count").innerHTML = `Location permission denied.`;
+                        });
+                    } else {
+                        document.getElementById("ambulance-count").innerHTML = `Geolocation not supported.`;
+                    }
+                }
+
+                // Start on load
+                window.onload = getUserLocationForAmbulances;
+            </script> -->
+        </div>
+    </section>
+    <section class="famous-doctors">
+        <h2>Famous Doctors in India</h2>
+        <div class="doctor-cards">
+            <div class="doctor-card">
+                <img src="./ass/images/devisetty.jpeg" alt="Dr. Devi Shetty" class="doctor-image">
+                <h3>Dr. Devi Shetty</h3>
+                <p>Cardiac Surgery</p>
+            </div>
+            <div class="doctor-card">
+                <img src="./ass/images/naresh.jpeg" alt="Dr. Naresh Trehan" class="doctor-image">
+                <h3>Dr. Naresh Trehan</h3>
+                <p>Cardiothoracic Surgery</p>
+            </div>
+            <div class="doctor-card">
+                <img src="./ass/images/randeep.jpeg" alt="Dr. Randeep Guleria" class="doctor-image">
+                <h3>Dr. Randeep Guleria</h3>
+                <p>Pulmonology</p>
+            </div>
+            <div class="doctor-card">
+                <img src="./ass/images/sudhansu.jpeg" alt="Dr. Sudhansu Bhattacharyya" class="doctor-image">
+                <h3>Dr. Sudhansu Bhattacharyya</h3>
+                <p>Neurosurgery</p>
+            </div>
+            <div class="doctor-card">
+                <img src="./ass/images/ashok.jpeg   " alt="Dr. Ashok Seth" class="doctor-image">
+                <h3>Dr. Ashok Seth</h3>
+                <p>Interventional Cardiology</p>
+            </div>
+        </div>
+    </section>
+    </div>
+    <section class="successful-surgeries">
+        <h2>Most Successful Surgeries in Famous Hospitals</h2>
+        <div class="hospital-cards">
+            <div class="hospital-card">
+                <img src="./ass/images/lung.jpeg" alt="AIIMS, New Delhi" class="hospital-image">
+                <h3>AIIMS, New Delhi</h3>
+                <p>Dr. Randeep Guleria</p>
+                <p>Lung Transplant</p>
+            </div>
+            <div class="hospital-card">
+                <img src="ass/images/heart.jpeg" alt="Narayana Health, Bengaluru" class="hospital-image">
+                <h3>Narayana Health, Bengaluru</h3>
+                <p>Dr. Devi Shetty</p>
+                <p>Heart Surgery</p>
+            </div>
+            <div class="hospital-card">
+                <img src="./ass/images/bypass.jpeg" alt="Medanta, Gurgaon" class="hospital-image">
+                <h3>Medanta, Gurgaon</h3>
+                <p>Dr. Naresh Trehan</p>
+                <p>Bypass Surgery</p>
+            </div>
+            <div class="hospital-card">
+                <img src="./ass/images/liver.jpeg" alt="Apollo Hospitals, Chennai" class="hospital-image">
+                <h3>Apollo Hospitals, Chennai</h3>
+                <p>Dr. Prathap Reddy</p>
+                <p>Liver Transplant</p>
+            </div>
+            <div class="hospital-card">
+                <img src="./ass/images/angio.jpeg" alt="Fortis Hospital, Mumbai" class="hospital-image">
+                <h3>Fortis Hospital, Mumbai</h3>
+                <p>Dr. Ashok Seth</p>
+                <p>Angioplasty</p>
+            </div>
+        </div>
+    </section>
+    </div>
+    <section class="faq-section">
+        <h2>Emergency Health FAQs</h2>
+        <div class="language-switcher">
+            <label for="language-select">Choose Language:</label>
+            <select id="language-select" onchange="switchLanguage()">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="te">Telugu</option>
+                <option value="ta">Tamil</option>
+            </select>
+        </div>
+        <div id="faq-container">
+            <!-- FAQs will be dynamically loaded here -->
+        </div>
+    </section>
+
+    <script>
+        const faqs = {
+            en: [
+                { question: "What should I do in case of a heart attack?", answer: "Call emergency services immediately and chew an aspirin if not allergic." },
+                { question: "How to stop severe bleeding?", answer: "Apply firm pressure with a clean cloth and seek medical help immediately." },
+                { question: "What to do during a seizure?", answer: "Clear the area, do not restrain the person, and call for medical assistance if it lasts over 5 minutes." },
+                { question: "What should I do for a burn injury?", answer: "Cool the burn under running water for 10-20 minutes and avoid applying ice or ointments." },
+                { question: "How to handle a choking incident?", answer: "Perform the Heimlich maneuver or back blows to dislodge the object causing choking." }
+            ],
+            hi: [
+                { question: "दिल का दौरा पड़ने पर क्या करें?", answer: "तुरंत आपातकालीन सेवाओं को कॉल करें और अगर एलर्जी न हो तो एस्पिरिन चबाएं।" },
+                { question: "गंभीर रक्तस्राव को कैसे रोकें?", answer: "साफ कपड़े से दबाव डालें और तुरंत चिकित्सा सहायता लें।" },
+                { question: "दौरे के दौरान क्या करें?", answer: "क्षेत्र को साफ करें, व्यक्ति को रोकें नहीं, और यदि यह 5 मिनट से अधिक समय तक रहता है तो चिकित्सा सहायता लें।" },
+                { question: "जलने की चोट के लिए क्या करें?", answer: "जले हुए हिस्से को 10-20 मिनट तक बहते पानी के नीचे ठंडा करें और बर्फ या मरहम न लगाएं।" },
+                { question: "घुटन की स्थिति में क्या करें?", answer: "हाइमलिच पद्धति या पीठ पर थपथपाकर घुटन को दूर करने की कोशिश करें।" }
+            ],
+            te: [
+                { question: "హార్ట్ ఎటాక్ వచ్చినప్పుడు ఏమి చేయాలి?", answer: "తక్షణమే అత్యవసర సేవలకు కాల్ చేయండి మరియు అలర్జీ లేకపోతే ఆస్పిరిన్ నమలండి." },
+                { question: "తీవ్ర రక్తస్రావాన్ని ఎలా ఆపాలి?", answer: "శుభ్రమైన గుడ్డతో బలమైన ఒత్తిడి పెట్టండి మరియు వెంటనే వైద్య సహాయం పొందండి." },
+                { question: "ఫిట్స్ వచ్చినప్పుడు ఏమి చేయాలి?", answer: "ప్రాంతాన్ని శుభ్రం చేయండి, వ్యక్తిని అడ్డుకోకండి మరియు 5 నిమిషాలకు మించి ఉంటే వైద్య సహాయం పొందండి." },
+                { question: "కాలిన గాయం కోసం ఏమి చేయాలి?", answer: "గాయాన్ని 10-20 నిమిషాల పాటు నీటి క్రింద చల్లబరచండి మరియు ఐస్ లేదా మలహం ఉపయోగించవద్దు." },
+                { question: "గిలికే ప్రమాదంలో ఏమి చేయాలి?", answer: "హైమ్లిచ్ పద్ధతి లేదా వెనుక భాగంలో తట్టి గిలికే సమస్యను తొలగించండి." }
+            ],
+            ta: [
+                { question: "இதயக் காய்ச்சல் ஏற்பட்டால் என்ன செய்ய வேண்டும்?", answer: "உடனடியாக அவசர சேவைகளை அழைக்கவும், மற்றும் அலர்ஜி இல்லையெனில் அஸ்பிரின் மென்று கொள்ளவும்." },
+                { question: "கடுமையான இரத்தப்போக்கை எப்படி நிறுத்துவது?", answer: "தூய்மையான துணியால் அழுத்தம் கொடுக்கவும் மற்றும் உடனடியாக மருத்துவ உதவியை நாடவும்." },
+                { question: "விசிறி ஏற்பட்டால் என்ன செய்ய வேண்டும்?", answer: "பகுதியை சுத்தம் செய்யவும், நபரை கட்டுப்படுத்த வேண்டாம், மற்றும் 5 நிமிடங்களுக்கு மேல் நீடித்தால் மருத்துவ உதவியை அழைக்கவும்." },
+                { question: "எரிந்த காயத்திற்கு என்ன செய்ய வேண்டும்?", answer: "காயத்தை 10-20 நிமிடங்கள் ஓடும் தண்ணீரின் கீழ் குளிர்விக்கவும் மற்றும் பனியை அல்லது மருந்தை பயன்படுத்த வேண்டாம்." },
+                { question: "மூச்சுத்திணறல் ஏற்பட்டால் என்ன செய்ய வேண்டும்?", answer: "ஹைம்லிச் முறை அல்லது முதுகில் தட்டுவதன் மூலம் மூச்சுத்திணறலை நீக்க முயற்சிக்கவும்." }
+            ]
+        };
+
+        function switchLanguage() {
+            const selectedLanguage = document.getElementById("language-select").value;
+            const faqContainer = document.getElementById("faq-container");
+            faqContainer.innerHTML = "";
+
+            faqs[selectedLanguage].forEach((faq, index) => {
+                const faqItem = document.createElement("div");
+                faqItem.classList.add("faq-item");
+                faqItem.innerHTML = `
+                    <h3 class="faq-question" onclick="toggleAnswer(${index})">${faq.question} <span class="arrow">▼</span></h3>
+                    <p class="faq-answer" id="answer-${index}" style="display: none;">${faq.answer}</p>
+                `;
+                faqContainer.appendChild(faqItem);
+            });
+        }
+
+        function toggleAnswer(index) {
+            const answer = document.getElementById(`answer-${index}`);
+            const arrow = answer.previousElementSibling.querySelector(".arrow");
+            if (answer.style.display === "none") {
+                answer.style.display = "block";
+                arrow.textContent = "▲";
+            } else {
+                answer.style.display = "none";
+                arrow.textContent = "▼";
+            }
+        }
+
+        // Load default language (English) on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            switchLanguage();
+        });
+    </script>
+
+
+
+
+    <!-- Floating Buttons -->
+    <div class="floating-buttons">
+        <button class="sos-btn" onclick="callSOS()">🚨 SOS</button>
+        <button class="chat-btn" onclick="toggleChatbot()"><i class="fa fa-robot"></i></button>
+    </div>
+
+    <!-- Chatbot Popup -->
+    <div class="chatbot-container" id="chatbot">
+        <div class="chat-header">
+            AyuraaBot
+            <button onclick="toggleChatbot()">✖</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your message...">
+            <button id="sendBtn">Send</button>
+        </div>
+    </div>
+    <script>
+        function callSOS() {
+            window.location.href = "tel:108";
+        }
+
+        function toggleChatbot() {
+            const chatbot = document.getElementById("chatbot");
+            chatbot.style.display = chatbot.style.display === "none" || chatbot.style.display === "" ? "flex" : "none";
+        }
+
+        function appendMessage(sender, text) {
+            const chat = document.getElementById("chatMessages");
+            const msg = document.createElement("div");
+            msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            chat.appendChild(msg);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById("userInput");
+            const message = input.value.trim();
+            if (!message) return;
+
+            appendMessage("You", message);
+            input.value = "";
+            getAyuraaResponse(message.toLowerCase());
+        }
+
+        function getAyuraaResponse(message) {
+            let reply = "Sorry, I didn't understand that. Could you please rephrase?";
+
+            const patterns = [
+                { keywords: ["hi", "hello", "hey", "hii"], reply: "Hi! I'm <b>Ayuraa</b> 🩺. How can I help you today?" },
+                { keywords: ["fever"], reply: "You may have a fever. Please take Paracetamol 500mg and consult your nearest doctor if it persists." },
+                { keywords: ["headache"], reply: "Mild headache: take rest and stay hydrated. Severe? Visit a neurologist." },
+                { keywords: ["vomiting"], reply: "Take ORS and stay hydrated. If it continues, consult a gastroenterologist." },
+                { keywords: ["chest pain"], reply: "Chest pain can be serious. Please visit a hospital or call emergency services immediately." },
+                { keywords: ["cold", "cough"], reply: "Use steam inhalation, take antihistamines. If persistent, see a doctor." },
+                { keywords: ["stomach pain", "abdominal pain"], reply: "Try an antacid for mild pain. Severe or lasting pain? See a gastro specialist." },
+                { keywords: ["sore throat"], reply: "Gargle with warm salt water, use lozenges. If pain persists, consult an ENT specialist." },
+                { keywords: ["diarrhea"], reply: "Hydrate with ORS. Avoid outside/spicy food. Visit a doctor if frequent." },
+                { keywords: ["burn"], reply: "Cool the area under running water. Avoid ice. Seek medical help if severe." },
+                { keywords: ["rash", "itching"], reply: "Apply soothing cream. For pain/itchiness, visit a dermatologist." },
+                { keywords: ["asthma"], reply: "Use your inhaler. Sit upright, stay calm. Visit a hospital if breathing worsens." },
+                { keywords: ["diabetes"], reply: "Monitor sugar levels, eat healthy, stay active. Consult your diabetologist regularly." },
+                { keywords: ["bp", "blood pressure"], reply: "High BP? Avoid salt, rest well. Check with a physician for medicine." },
+                { keywords: ["period", "cramps", "menstrual pain"], reply: "Period cramps? Use warm compress, take mild pain reliever. Severe cramps? Visit a gynecologist." },
+                { keywords: ["thank", "thanks"], reply: "You're welcome! Stay healthy 💙." },
+
+                // Emergency responses
+                { keywords: ["heart attack"], reply: "🚨 Severe chest pain, breathlessness? It could be a heart attack. Call emergency services immediately!" },
+                { keywords: ["stroke"], reply: "🚨 Symptoms like face drooping, slurred speech, and arm weakness? Act FAST and call an ambulance!" },
+                { keywords: ["unconscious"], reply: "🚨 Check for breathing and pulse. If unresponsive, begin CPR and call emergency help immediately." },
+                { keywords: ["seizure"], reply: "🚨 Clear the area around the person. Do not restrain. Call emergency if seizure lasts over 5 minutes." },
+                { keywords: ["bleeding"], reply: "🚨 Apply pressure using a clean cloth. If bleeding doesn’t stop, visit the ER or call emergency services." },
+                { keywords: ["breathing difficulty", "not breathing"], reply: "🚨 Sit upright, stay calm, and loosen clothing. If it worsens, call emergency medical help." },
+                { keywords: ["electric shock"], reply: "🚨 Turn off the power source if safe. Do not touch the person directly. Call emergency services." },
+                { keywords: ["poison"], reply: "🚨 Do not induce vomiting. Call the poison control center or rush to the hospital immediately." },
+                { keywords: ["drowning"], reply: "🚨 Remove the person from water. Begin CPR if not breathing and call emergency services immediately." }
+            ];
+
+            for (let item of patterns) {
+                for (let phrase of item.keywords) {
+                    if (message.includes(phrase)) {
+                        reply = item.reply;
+                        appendMessage("AyuraaBot", reply);
+                        return;
+                    }
+                }
+            }
+
+            appendMessage("AyuraaBot", reply);
+        }
+
+        // Initialize chatbot toggle state
+        document.getElementById("sendBtn").addEventListener("click", sendMessage);
+        const sendBtn = document.getElementById("sendBtn");
+        sendBtn.addEventListener("click", sendMessage);
+
+        // Send message on Enter key press
+        document.getElementById("userInput").addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+
+    </script>
+    <footer class="footer">
+        <div class="footer-bottom">
+            <p>&copy; 2025 Aayura HealthHub. All rights reserved.</p>
+        </div>
+    </footer>
+    <script src="/js/script.js"></script>
+</body>
+
+</html>

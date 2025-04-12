@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login & Signup</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(to right, #74ebd5, #acb6e5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .container {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        transition: all 0.3s ease-in-out;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    input,
+    button {
+        width: 100%;
+        padding: 12px 15px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+    }
+
+    button {
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+
+    .divider {
+        text-align: center;
+        margin: 20px 0;
+        font-weight: bold;
+        color: #888;
+    }
+
+    .link {
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .link a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .link a:hover {
+        text-decoration: underline;
+    }
+
+    #status {
+        text-align: center;
+        font-weight: bold;
+        margin-top: 10px;
+        color: green;
+    }
+
+    .g_id_signin {
+        display: flex;
+        justify-content: center;
+        margin-top: 15px;
+    }
+
+    /* Media Queries for Responsiveness */
+    @media (max-width: 768px) {
+        body {
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 90%;
+        }
+
+        input,
+        button {
+            font-size: 14px;
+            padding: 10px 12px;
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            padding: 20px;
+            max-width: 100%;
+        }
+
+        input,
+        button {
+            font-size: 12px;
+            padding: 8px 10px;
+        }
+
+        h2 {
+            font-size: 18px;
+        }
+
+        .divider {
+            font-size: 14px;
+        }
+
+        .link a {
+            font-size: 14px;
+        }
+    }
+</style>
+</head>
+<body>
+  <!-- Signup Section -->
+  <div class="container" id="signup-container">
+    <h2>Create Account</h2>
+    <input type="text" id="name" placeholder="Full Name" />
+    <input type="email" id="signup-email" placeholder="Email" />
+    <input type="password" id="signup-password" placeholder="Password" />
+    <button id="signup-btn">Sign Up</button>
+    <div class="divider">OR</div>
+    <div id="g_id_onload"
+      data-client_id="713395215808-modet8i5ar0f7svfq6rupnudt73s4ji0.apps.googleusercontent.com"
+      data-context="signup"
+      data-callback="handleGoogleSignup"
+      data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="signup_with"
+      data-shape="rectangular"
+      data-logo_alignment="left">
+    </div>
+    <div class="link">
+      Already have an account? <a href="#" id="show-login">Login</a>
+    </div>
+    <p id="status"></p>
+  </div>
+
+  <!-- Login Section -->
+  <div class="container" id="login-container" style="display: none;">
+    <h2>Welcome Back</h2>
+    <input type="email" id="login-email" placeholder="Email" />
+    <input type="password" id="login-password" placeholder="Password" />
+    <button id="login-btn">Login</button>
+    <div class="divider">OR</div>
+    <div id="g_id_onload"
+      data-client_id="713395215808-modet8i5ar0f7svfq6rupnudt73s4ji0.apps.googleusercontent.com"
+      data-context="signin"
+      data-callback="handleGoogleLogin"
+      data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+      data-type="standard"
+      data-size="large"
+      data-theme="outline"
+      data-text="signin_with"
+      data-shape="rectangular"
+      data-logo_alignment="left">
+    </div>
+    <div class="link">
+      Don’t have an account? <a href="#" id="show-signup">Sign Up</a>
+    </div>
+    <p id="status"></p>
+  </div>
+
+  <!-- JavaScript -->
+<script>
+  
+  const signupBtn = document.getElementById("signup-btn");
+  const loginBtn = document.getElementById("login-btn");
+  const showLogin = document.getElementById("show-login");
+  const showSignup = document.getElementById("show-signup");
+  const signupContainer = document.getElementById("signup-container");
+  const loginContainer = document.getElementById("login-container");
+  const status = document.querySelectorAll("#status");
+
+  // Toggle Login/Signup View
+  showLogin.addEventListener("click", () => {
+    signupContainer.style.display = "none";
+    loginContainer.style.display = "block";
+  });
+
+  showSignup.addEventListener("click", () => {
+    loginContainer.style.display = "none";
+    signupContainer.style.display = "block";
+  });
+
+  // Email Signup
+  signupBtn.addEventListener("click", () => {
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("signup-email").value.trim();
+    const password = document.getElementById("signup-password").value.trim();
+
+    if (!name || !email || !password) {
+      return setStatus("Please fill all the fields.", true);
+    }
+
+    let users = JSON.parse(localStorage.getItem("users")) || {};
+
+    if (users[email]) {
+      return setStatus("User already exists. Please login.", true);
+    }
+
+    users[email] = { name, password };
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem("user", JSON.stringify({ name, email }));
+
+    setStatus("Signup successful! Redirecting...", false);
+    setTimeout(() => {
+      window.location.href = "Frontend/index.html";
+    }, 1000);
+  });
+
+  // Email Login
+  loginBtn.addEventListener("click", () => {
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value.trim();
+
+    if (!email || !password) {
+      return setStatus("Please fill in all fields.", true);
+    }
+
+    let users = JSON.parse(localStorage.getItem("users")) || {};
+
+    if (!users[email] || users[email].password !== password) {
+      return setStatus("Invalid email or password.", true);
+    }
+
+    localStorage.setItem("user", JSON.stringify({ name: users[email].name, email }));
+    setStatus("Login successful! Redirecting...", false);
+    setTimeout(() => {
+      window.location.href = "Frontend/index.html";
+    }, 1000);
+  });
+
+  // Google Signup/Login Handlers (DON’T TOUCH — Already working)
+  function handleGoogleSignup(response) {
+    const user = jwt_decode(response.credential);
+    localStorage.setItem("user", JSON.stringify({
+      name: user.name,
+      email: user.email,
+      picture: user.picture
+    }));
+    setStatus("Google signup successful! Redirecting...", false);
+    setTimeout(() => window.location.href = "Frontend/index.html", 1000);
+  }
+
+  function handleGoogleLogin(response) {
+    const user = jwt_decode(response.credential);
+    localStorage.setItem("user", JSON.stringify({
+      name: user.name,
+      email: user.email,
+      picture: user.picture
+    }));
+    setStatus("Google login successful! Redirecting...", false);
+    setTimeout(() => window.location.href = "Frontend/index.html", 1000);
+  }
+
+  function setStatus(msg, isError) {
+    status.forEach(s => {
+      s.textContent = msg;
+      s.style.color = isError ? "red" : "green";
+    });
+  }
+
+
+</script>
+</body>
+</html>

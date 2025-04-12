@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blood Bank Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<link rel="stylesheet" href="./Frontend/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">Ayuraa</div>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html"><i class="fa fa-home"></i> Home</a></li>
+            <li><a href="../Hospitaldashboard.html"><i class="fa fa-hospital"></i> Hospitals</a></li>
+            <li><a href="../Bloodbanks.html"><i class="fa fa-tint"></i> Blood Bank</a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle"><i class="fa fa-search"></i> Explore</a>
+                <ul class="dropdown-menu">
+                    <li><a href="/doctors"><i class="fa fa-user-md"></i> Doctors</a></li>
+                    <li><a href="/beds"><i class="fa fa-bed"></i> Bed Availability</a></li>
+                    <li><a href="/oxygen-cylinders"><i class="fa fa-medkit"></i> Oxygen Cylinders</a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="nav-actions">
+            <!-- <button id="theme-toggle"><i class="fa fa-moon"></i></button> -->
+            <div id="auth-section">
+                <a href="/login.html" id="login-btn">Login</a>
+            </div>
+            <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                    const authSection = document.getElementById("auth-section");
+                    const loginBtn = document.getElementById("login-btn");
+                    const user = JSON.parse(localStorage.getItem("user"));
+
+                    if (user && user.picture) {
+                        // User is logged in
+                        authSection.innerHTML = `
+                      <div class="profile-container">
+                        <img src="${user.picture}" alt="Profile" class="profile-img" id="profile-img" />
+                        <div class="logout-btn" id="logout-btn">Logout</div>
+                      </div>
+                    `;
+
+                        const profileImg = document.getElementById("profile-img");
+                        const logoutBtn = document.getElementById("logout-btn");
+
+                        profileImg.addEventListener("click", () => {
+                            logoutBtn.style.display = logoutBtn.style.display === "block" ? "none" : "block";
+                        });
+
+                        logoutBtn.addEventListener("click", () => {
+                            localStorage.removeItem("user");
+                            window.location.reload();
+                        });
+                    } else {
+                        // User not logged in
+                        loginBtn.disabled = false;
+                        loginBtn.addEventListener("click", () => {
+                            window.location.href = "./login.html";
+                        });
+                    }
+                });
+            </script>
+            <button id="mobile-toggle">&#9776;</button>
+        </div>
+        <div id="mobile-menu" class="mobile-menu hidden">
+            <a href="#">Home</a>
+            <a href="#">Hospitals</a>
+            <a href="#">Services</a>
+            <a href="#">Contact</a>
+        </div>
+    </nav>
+<div class="dashboard">
+  <h2>🩸 Blood Bank Dashboard</h2>
+
+  <!-- Top right Donor button -->
+  <div class="top-right">
+    <button id="donorBtn" onclick="showDonorForm()">Become a Donor</button>
+  </div>
+
+  <!-- Blood Group Filters -->
+  <div class="blood-groups" id="bloodGroupBtns"></div>
+
+  <!-- Display Blood Units -->
+  <div class="units-list" id="unitsList">
+    <h3>Select a blood group to view availability.</h3>
+  </div>
+
+  <!-- Donate Section -->
+  <div class="donate-section" id="donateSection">
+    <h3>Become a Donor</h3>
+    <label>Name</label>
+    <input type="text" id="donorName" placeholder="Your full name" />
+
+    <label>Blood Group</label>
+    <select id="donorGroup">
+      <option value="">Select</option>
+      <option>A+</option><option>A-</option>
+      <option>B+</option><option>B-</option>
+      <option>AB+</option><option>AB-</option>
+      <option>O+</option><option>O-</option>
+    </select>
+
+    <label>Contact Number</label>
+    <input type="text" id="donorContact" placeholder="Phone number" />
+
+    <label>Location</label>
+    <input type="text" id="donorLocation" placeholder="City or Hospital" />
+
+    <button onclick="submitDonor()">Submit</button>
+  </div>
+
+  <!-- Donor Profile Popup -->
+  <div class="profile-popup" id="donorProfile">
+    <div class="edit-toggle">
+        <input type="checkbox" id="enableEdit" onchange="toggleEdit()"> Enable Edit
+      </div>
+    <button class="close-btn" onclick="toggleProfile()">✖</button>
+    
+    <label>Name:</label>
+    <input id="profileName" readonly>
+
+    <label>Blood Group:</label>
+    <input id="profileGroup" readonly>
+
+    <label>Contact:</label>
+    <input id="profileContact" readonly>
+
+    <label>Location:</label>
+    <input id="profileLocation" readonly>
+
+    <button onclick="saveProfile()">Save</button>
+  </div>
+</div>
+
+<script>
+  const bloodBankData = [
+    { bloodGroup: "A+", location: "City Hospital", units: 5 },
+    { bloodGroup: "A+", location: "Red Cross Center", units: 3 },
+    { bloodGroup: "B+", location: "Metro Blood Bank", units: 4 },
+    { bloodGroup: "O+", location: "Community Health", units: 5 },
+    { bloodGroup: "AB-", location: "General Hospital", units: 2 },
+    { bloodGroup: "O-", location: "Red Cross Center", units: 1 },
+    { bloodGroup: "B-", location: "HealthCare Clinic", units: 2 },
+    { bloodGroup: "AB+", location: "City Blood Center", units: 4 },
+    { bloodGroup: "A-", location: "Downtown Hospital", units: 3 },
+    { bloodGroup: "O+", location: "Urban Health Center", units: 2 },
+    { bloodGroup: "B+", location: "Central Blood Bank", units: 5 }
+  ];
+
+  const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+  const bloodGroupBtns = document.getElementById("bloodGroupBtns");
+  const unitsList = document.getElementById("unitsList");
+
+  bloodGroups.forEach(group => {
+    const btn = document.createElement("button");
+    btn.textContent = group;
+    btn.onclick = () => showUnits(group, btn);
+    bloodGroupBtns.appendChild(btn);
+  });
+
+  function showUnits(group, clickedBtn) {
+    const buttons = document.querySelectorAll(".blood-groups button");
+    buttons.forEach(btn => btn.classList.remove("active"));
+    clickedBtn.classList.add("active");
+
+    const filtered = bloodBankData.filter(b => b.bloodGroup === group);
+    unitsList.innerHTML = `<h3>Available units for ${group}:</h3>`;
+    if (filtered.length === 0) {
+      unitsList.innerHTML += `<p>No units available currently.</p>`;
+    } else {
+      filtered.forEach(bank => {
+        const div = document.createElement("div");
+        div.className = "unit";
+        div.innerHTML = `<strong>${bank.location}</strong> - ${bank.units} units`;
+        unitsList.appendChild(div);
+      });
+    }
+  }
+
+  function showDonorForm() {
+    document.getElementById("donateSection").style.display = "block";
+  }
+
+  function submitDonor() {
+    const name = document.getElementById("donorName").value;
+    const group = document.getElementById("donorGroup").value;
+    const contact = document.getElementById("donorContact").value;
+    const location = document.getElementById("donorLocation").value;
+
+    if (!name || !group || !contact || !location) {
+      alert("Please fill all the fields.");
+      return;
+    }
+
+    // Set values in profile
+    document.getElementById("profileName").value = name;
+    document.getElementById("profileGroup").value = group;
+    document.getElementById("profileContact").value = contact;
+    document.getElementById("profileLocation").value = location;
+
+    // Update top-right button
+    const topRight = document.querySelector(".top-right");
+    topRight.innerHTML = `<button class="donor-name-btn" onclick="toggleProfile()">${name}</button>`;
+
+    // Hide the form
+    document.getElementById("donateSection").style.display = "none";
+  }
+
+  function toggleProfile() {
+    const profile = document.getElementById("donorProfile");
+    profile.style.display = profile.style.display === "none" || profile.style.display === "" ? "block" : "none";
+  }
+
+  function toggleEdit() {
+    const editable = document.getElementById("enableEdit").checked;
+    document.getElementById("profileName").readOnly = !editable;
+    document.getElementById("profileGroup").readOnly = !editable;
+    document.getElementById("profileContact").readOnly = !editable;
+    document.getElementById("profileLocation").readOnly = !editable;
+  }
+
+  function saveProfile() {
+    if (!document.getElementById("enableEdit").checked) {
+      alert("Enable edit first!");
+      return;
+    }
+    alert("Profile updated successfully!");
+    document.getElementById("enableEdit").checked = false;
+    toggleEdit();
+  }
+</script>
+<footer class="footer">
+    <div class="footer-bottom">
+        <p>&copy; 2025 Aayura HealthHub. All rights reserved.</p>
+    </div>
+</footer>
+</body>
+</html>
